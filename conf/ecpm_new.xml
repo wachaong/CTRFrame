@@ -1,0 +1,63 @@
+<layers>
+    <layer type = "source" bucket_num = "1">
+        <experiments>
+        <experiment name = "identity" bucket_bin = "1">
+            <class>com.autohome.adrd.algo.click_model.source.autohome.LabelInstanceSingleOld</class>
+            <parameters></parameters>
+        </experiment>
+        </experiments>
+    </layer>
+	<layer type =  "Userfeature">
+        <experiments>
+            <experiment name = "raw_target1">
+                <type>join</type>
+                <key>cookie</key>
+                <path>/dw/mds/raw_target1</path>
+            </experiment>
+        </experiments>
+    </layer>
+    <layer type = "Ufeature">
+        <experiments>
+            <experiment name = "cookie_time">
+                <type>join</type>
+                <key>cookie</key>
+                <path>/dw/mds/cookie_time</path>
+            </experiment>
+        </experiments>
+    </layer>
+
+    <layer type = "Adfeature">
+        <experiments>
+            <experiment name = "ad1">
+                <type>join</type>
+                <key>creativeId</key>
+                <path>/dw/mds/ad1</path>
+            </experiment>
+        </experiments>
+    </layer>
+
+    <layer type = "transform" bucket_num = "1">
+        <experiments>
+        <experiment name = "filter" bucket_bin = "1">
+            <class>com.autohome.adrd.algo.click_model.feature_engineering.mechanism.SubsetTransformer</class>
+            <parameters>10000</parameters>
+        </experiment>
+        </experiments>
+    </layer>
+
+    <layer type = "transform" bucket_num = "1">
+        <experiments>
+        <experiment name = "discretization" bucket_bin = "1">
+            <class>com.autohome.adrd.algo.click_model.feature_engineering.mechanism.Interaction</class>
+            <parameters>0</parameters>
+        </experiment>
+        </experiments>
+    </layer>
+    
+    <layer type = "model" bucket_num = "1">
+	<experiments>
+	    <experiment name = "LR" bucket_bin = "1">
+	    </experiment>
+        </experiments>
+    </layer>
+</layers>
