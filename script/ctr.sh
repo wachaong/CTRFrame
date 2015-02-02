@@ -10,26 +10,34 @@ l_data=${l_workpath}/data
 
 setfile=$1
 
-Hadoop=`which hadoop`
+CTR=/dw/mds/ctr
+setFile=$CTR/config_file/parse_xml_result
+#source_input_file=$CTR/sessionlog_ad/
+source_out_file=$CTR/source_level_out/
+feature_level=$CTR/feature_level_out/
+transform_level=$CTR/transform_level_out/
+model=$CTR/model_level_out/
 
-scala $l_workpath/tools/parse_xml.scala $setfile > $l_data/parse_xml_result
+Hadoop=`which hadoop`
+Scala=`which scala`
+
+$Scala $l_workpath/tools/parse_xml.scala $setfile > $l_data/parse_xml_result
+
+$Hadoop fs -test -e $CTR/config_file/parse_xml_result
+if [ $? -eq 0 ];then
+	$Hadoop fs -rm -r $CTR/config_file/parse_xml_result
+else
+	$Hadoop fs -test -e $CTR/config_file
+	if [ $? -ne 0 ];then
+		$Hadoop fs -mkdir $CTR/config_file/
+	fi
+fi
 
 $Hadoop fs -test -e /dw/mds/ctr/config_file/parse_xml_result
 if [ $? -eq 0 ];then
 	$Hadoop fs -rm -r /dw/mds/ctr/config_file/parse_xml_result
 fi
 $Hadoop fs -put $l_data/parse_xml_result /dw/mds/ctr/config_file/parse_xml_result
-
-setFile=/dw/mds/ctr/config_file/parse_xml_result
-source_input_file=/dw/mds/ctr/sessionlog_ad/
-source_out_file=/dw/mds/ctr/source_level_out/
-feature_level=/dw/mds/ctr/feature_level_out/
-transform_level=/dw/mds/ctr/transform_level_out/
-model=/dw/mds/model_level_out/
-
-source_num=`cat $l_data/parse_xml_result | awk -F "\t" '{print $1}' | grep "source" | wc -l`
-
-source_count=0
 
 begin=1
 end=0
@@ -45,23 +53,16 @@ cat $l_data/parse_xml_result | while read LINE
 		type=`echo ${array[0]}|awk -F ":" '{print $2}'`
 		case "$type" in
 			"source" )
-				param_num=`echo ${array[2]} | awk -F ":" '{sum+=1}END{print sum}'`
 				class_name=`echo ${array[1]} | awk -F ":" '{print $2}'`
-				if [ $param_num -eq 1 ];then
-					param=0
-				else
-					param=`echo ${array[2]} | awk -F ":" '{print $2}'`
-				fi
-					sh $l_script/source_level.sh $class_name $source_input_file "$source_out_file"source_"$source_count" $param
-				((source_count=$source_count + 1));;
+				source_input_file=`echo ${array[4]} | awk -F ":" '{print $2}'`
+				sh $l_script/source_level.sh $class_name $source_input_file $source_out_file"source_base_sample" ${array[2]}
+				;;
 			"feature" )
 				if [ $begin != $end ];then
-					for((i=0;i<$source_num;++i))
-					do
-						sh $l_script/feature_level.sh $setFile "$source_out_file"source_"$i" $feature_level
-					done
+					sh $l_script/feature_level.sh $setFile $source_out_file"source_base_sample" $feature_level
 					begin=$end
 				fi
+				exit
 				;;
 			"transform" )
 				type=`echo ${array[4]} | awk -F ":" '{print $2}'`

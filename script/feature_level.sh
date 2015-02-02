@@ -33,11 +33,11 @@ fi
 spark-submit \
 --class feature_level \
 --master yarn-cluster \
---executor-memory 20g \
+--executor-memory 28g \
 --executor-cores 30 \
---num-executors 20 \
---driver-memory 20G \
+--num-executors 30 \
+--driver-memory 28G \
 $l_lib/sample_operator-1.0-SNAPSHOT.jar \
 $set_file \
 $hadoop_input \
-$hadoop_out
+$hadoop_out 
